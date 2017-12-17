@@ -21,7 +21,17 @@ class EncountersController < ApplicationController
 
   # GET /encounters/1
   def show
-    render json: @encounter
+    xml = Nokogiri::XML::Builder.new { |xml| 
+      xml.ClinicalDocument do
+        xml.patientname @encounter.patientname
+        xml.workername @encounter.workername
+        xml.meetdate @encounter.meetdate
+      end
+    }.to_xml
+    File.open('file.xml', 'w') do |file|
+      file.write xml
+    end
+    send_data xml, filename: 'encounter.xml'
   end
 
   # POST /encounters
@@ -29,7 +39,7 @@ class EncountersController < ApplicationController
     @encounter = Encounter.new(encounter_params)
 
     if @encounter.save
-      render json: @encounter, status: :created, location: @encounter
+      render json: @encounter
     else
       render json: @encounter.errors, status: :unprocessable_entity
     end
